@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name       Google Scholar Excel export
 // @namespace  http://eriksklotins.lv/
-// @version    0.3
+// @version    0.4
 // @description  enter something useful
 // @match      *://scholar.google.com/*
 // @match      *://scholar.google.se/*
 // @grant       none
-// @copyright  2014+, E.Klotins
+// @copyright  2014+, E.Klotins, A.Sundelin
 // @require https://code.jquery.com/jquery-3.2.1.min.js
 // ==/UserScript==
 
@@ -45,7 +45,17 @@
     var clickableLink = ['=HYPERLINK','("',link,'")'].join('');
     var meta = $('.gs_a', item).text().replace(/(\r\n|\n|\r|\t)/gm,"");
     var abstract = $('.gs_rs', item).text().replace(/(\r\n|\n|\r|\t)/gm,"");
-    results.push({ index:index,title: title,link:link, clickableLink:clickableLink,  meta: meta, abstract:abstract});
+    var gscholarid = ""
+    $('.gs_fl a',item).each(function(index) {
+        var txt = $(this).attr('href');
+        if (txt.match(/(cites|cluster)=/gi)) {
+            var parm = txt.match(/(cites|cluster)=[\w-]+/gi)[0];
+            var id = parm.replace(/(cites|cluster)=/g, "")
+            gscholarid = id;
+        }
+    });
+
+    results.push({ index:index, gscholarid:gscholarid, meta: meta, title: title, link:link,  abstract:abstract, clickableLink:clickableLink});
     //console.log({ index:index,title: title,link:link, meta: meta, abstract:abstract});
   };
     
@@ -69,7 +79,7 @@
     var parsePage = function()
     {
        results = [];
-       $('.gs_r').each(parseResult);
+       $('.gs_or').each(parseResult);
         console.log(results);
        var str = encodeCSV(results);
        displayResults(str);
